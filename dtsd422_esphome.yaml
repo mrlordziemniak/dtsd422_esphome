@@ -1,0 +1,584 @@
+esphome:
+  name: esp32-smartmeter
+  friendly_name: ESPHome Smartmeter
+
+
+substitutions:
+  friendly_name: SmartMeter
+  esp_id: smartmeter
+  friendly_node_name: ESP-smartmeter
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    
+status_led:
+  pin: 
+    number: GPIO2 #PIN D4
+    inverted: yes # "yes" - Dioda mruga gdy nie można nawiązać połączenie.
+                  # "no"  - Dioda świeci gdy połączenie jest nawiązane.
+ 
+# Enable logging
+logger:
+    level: DEBUG
+    baud_rate: 0
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: ""
+
+ota:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32-smartmeter"
+    password: ""
+
+captive_portal:
+  
+uart:
+  id: mod_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: EVEN
+ 
+modbus:
+  id: mod_bus_smartmeter
+ 
+modbus_controller:
+  - id: smartmeter
+    address: 0x01
+    modbus_id: mod_bus_smartmeter
+    update_interval: 10s
+
+sensor:
+  - platform: wifi_signal
+    id: ${esp_id}_wifi_signal
+    name: ${friendly_node_name} WiFi Signal
+    update_interval: 60s
+    icon: "mdi:wifi"
+
+  - platform: uptime
+    id: ${esp_id}_uptime
+    name: ${friendly_node_name} Uptime
+    filters:
+      - lambda: return x / 60.0;
+    unit_of_measurement: min
+    icon: "mdi:clock-start"
+
+#Smartmeter
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT1 Voltage
+    id: ${esp_id}_ct1_v
+    register_type: holding
+    address: 0x01
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT2 Voltage
+    id: ${esp_id}_ct2_v
+    register_type: holding
+    address: 0x02
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT3 Voltage
+    id: ${esp_id}_ct3_v
+    register_type: holding
+    address: 0x03
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT4 Voltage
+    id: ${esp_id}_ct4_v
+    register_type: holding
+    address: 0x1001
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT5 Voltage
+    id: ${esp_id}_ct5_v
+    register_type: holding
+    address: 0x1002
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT6 Voltage
+    id: ${esp_id}_ct6_v
+    register_type: holding
+    address: 0x1003
+    unit_of_measurement: "V"
+    state_class: "measurement"
+    device_class: "voltage"
+    icon: "mdi:alpha-v-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct1_cs
+    register_type: holding
+    address: 0x07
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct1_c
+    register_type: holding
+    address: 0x08
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT1 Current
+    id: ${esp_id}_ct1_current  
+    lambda: |-
+      if (id(${esp_id}_ct1_cs).state == 0) {
+      return (id(${esp_id}_ct1_c).state);
+      }
+      else{
+      return (id(${esp_id}_ct1_c).state * -1);
+      }
+    unit_of_measurement: A
+    accuracy_decimals: 3
+    icon: "mdi:alpha-a-circle"
+    device_class: "current"
+    state_class: "measurement"
+    update_interval: 10s
+
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct2_cs
+    register_type: holding
+    address: 0x09
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct2_c
+    register_type: holding
+    address: 0x0A
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT2 Current
+    id: ${esp_id}_ct2_current  
+    lambda: |-
+      if (id(${esp_id}_ct2_cs).state == 0) {
+      return (id(${esp_id}_ct2_c).state);
+      }
+      else{
+      return (id(${esp_id}_ct2_c).state * -1);
+      }
+    unit_of_measurement: A
+    accuracy_decimals: 3
+    icon: "mdi:alpha-a-circle"
+    device_class: "current"
+    state_class: "measurement"
+    update_interval: 10s
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct3_cs
+    register_type: holding
+    address: 0x0B
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct3_c
+    register_type: holding
+    address: 0x0C
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT3 Current
+    id: ${esp_id}_ct3_current  
+    lambda: |-
+      if (id(${esp_id}_ct3_cs).state == 0) {
+      return (id(${esp_id}_ct3_c).state);
+      }
+      else{
+      return (id(${esp_id}_ct3_c).state * -1);
+      }
+    unit_of_measurement: A
+    accuracy_decimals: 3
+    icon: "mdi:alpha-a-circle"
+    device_class: "current"
+    state_class: "measurement"
+    update_interval: 10s
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT4 Current
+    id: ${esp_id}_ct4_c
+    register_type: holding
+    address: 0x1008
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    device_class: "current"
+    icon: "mdi:alpha-a-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT5 Current
+    id: ${esp_id}_ct5_c
+    register_type: holding
+    address: 0x100A
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    device_class: "current"
+    icon: "mdi:alpha-a-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT6 Current
+    id: ${esp_id}_ct6_c
+    register_type: holding
+    address: 0x100C
+    unit_of_measurement: "A"
+    state_class: "measurement"
+    device_class: "current"
+    icon: "mdi:alpha-a-circle-outline"
+    value_type: U_WORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct1_ps
+    register_type: holding
+    address: 0x0F
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct1_p
+    register_type: holding
+    address: 0x10
+    value_type: U_WORD
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT1 Active Power
+    id: ${esp_id}_ct1_power  
+    lambda: |-
+      if (id(${esp_id}_ct1_ps).state == 0) {
+      return (id(${esp_id}_ct1_p).state);
+      }
+      else{
+      return (id(${esp_id}_ct1_p).state * -1);
+      }
+    unit_of_measurement: "W"
+    icon: "mdi:home-lightning-bolt"
+    device_class: "power"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    update_interval: 10s
+    
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct2_ps
+    register_type: holding
+    address: 0x11
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct2_p
+    register_type: holding
+    address: 0x12
+    value_type: U_WORD
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT2 Active Power
+    id: ${esp_id}_ct2_power  
+    lambda: |-
+      if (id(${esp_id}_ct2_ps).state == 0) {
+      return (id(${esp_id}_ct2_p).state);
+      }
+      else{
+      return (id(${esp_id}_ct2_p).state * -1);
+      }
+    unit_of_measurement: "W"
+    icon: "mdi:home-lightning-bolt"
+    device_class: "power"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    update_interval: 10s
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct3_ps
+    register_type: holding
+    address: 0x13
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_ct3_p
+    register_type: holding
+    address: 0x14
+    value_type: U_WORD
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} CT3 Active Power
+    id: ${esp_id}_ct3_power  
+    lambda: |-
+      if (id(${esp_id}_ct3_ps).state == 0) {
+      return (id(${esp_id}_ct3_p).state);
+      }
+      else{
+      return (id(${esp_id}_ct3_p).state * -1);
+      }
+    unit_of_measurement: "W"
+    icon: "mdi:home-lightning-bolt"
+    device_class: "power"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    update_interval: 10s
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT4 Active Power
+    id: ${esp_id}_ct4_p
+    register_type: holding
+    address: 0x1010
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    device_class: "power"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_WORD
+  
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT5 Active Power
+    id: ${esp_id}_ct5_p
+    register_type: holding
+    address: 0x1012
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    device_class: "power"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} CT6 Active Power
+    id: ${esp_id}_ct6_p
+    register_type: holding
+    address: 0x1014
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    device_class: "power"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_taps
+    register_type: holding
+    address: 0x0D
+    value_type: U_WORD
+    internal: true 
+ 
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    id: ${esp_id}_tap
+    register_type: holding
+    address: 0x0E
+    value_type: U_WORD
+    internal: true 
+
+  - platform: template
+    name: ${friendly_name} Total Active Power
+    id: ${esp_id}_tapower
+    lambda: |-
+      if (id(${esp_id}_taps).state == 0) {
+      return (id(${esp_id}_tap).state);
+      }
+      else{
+      return (id(${esp_id}_tap).state * -1);
+      }
+    unit_of_measurement: "W"
+    icon: "mdi:transmission-tower"
+    device_class: "power"
+    state_class: "measurement"
+    accuracy_decimals: 0
+    update_interval: 10s
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} Total Active Power 2
+    id: ${esp_id}_tap2
+    register_type: holding
+    address: 0x100E
+    unit_of_measurement: "W"
+    state_class: "measurement"
+    device_class: "power"
+    icon: "mdi:transmission-tower"
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} Total Positive Energy
+    id: ${esp_id}_tpe
+    register_type: holding
+    address: 0x2A
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: "energy"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} Total Positive Energy 2
+    id: ${esp_id}_tpe2
+    register_type: holding
+    address: 0x102A
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: "energy"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} Total Negative Energy
+    id: ${esp_id}_tne
+    register_type: holding
+    address: 0x34
+    unit_of_measurement: "kWh"
+    state_class: "total_increasing"
+    device_class: "energy"
+    icon: "mdi:home-lightning-bolt"
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  - platform: modbus_controller
+    modbus_controller_id: smartmeter
+    name: ${friendly_name} Hz
+    id: ${esp_id}_hz
+    register_type: holding
+    address: 0x29
+    unit_of_measurement: "Hz"
+    state_class: "measurement"
+    device_class: "frequency"
+    icon: "mdi:sine-wave"
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+  - platform: copy
+    source_id: ${esp_id}_wifi_signal
+    id: ${esp_id}_wifi_signal_hr
+    name: "${friendly_node_name} WiFi %"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    icon: "mdi:wifi"
+    entity_category: "diagnostic"
+
+switch:
+  # Expose an ESP32 restart button to HA
+  - platform: restart
+    name: ${friendly_name} ESP32 Restart
+    id: console_fan_restart
+
+binary_sensor:
+  - platform: status
+    name: ${friendly_node_name} Status
+
+    
