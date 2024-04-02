@@ -2,7 +2,6 @@ esphome:
   name: esp32-smartmeter
   friendly_name: ESPHome Smartmeter
 
-
 substitutions:
   friendly_name: SmartMeter
   esp_id: smartmeter
@@ -75,7 +74,6 @@ sensor:
     icon: "mdi:clock-start"
 
 #Smartmeter
-
   - platform: modbus_controller
     modbus_controller_id: smartmeter
     name: ${friendly_name} CT1 Voltage
@@ -201,7 +199,6 @@ sensor:
     device_class: "current"
     state_class: "measurement"
     update_interval: 10s
-
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
@@ -353,7 +350,6 @@ sensor:
     accuracy_decimals: 0
     update_interval: 10s
     
-
   - platform: modbus_controller
     modbus_controller_id: smartmeter
     id: ${esp_id}_ct2_ps
