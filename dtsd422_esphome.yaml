@@ -57,6 +57,9 @@ modbus_controller:
     address: 0x01
     modbus_id: mod_bus_smartmeter
     update_interval: 10s
+    setup_priority: -10
+    command_throttle:
+      milliseconds: 100
 
 sensor:
   - platform: wifi_signal
@@ -166,111 +169,69 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct1_cs
-    register_type: holding
-    address: 0x07
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct1_c
-    register_type: holding
-    address: 0x08
-    value_type: U_WORD
-    accuracy_decimals: 3
-    filters:
-      - multiply: 0.001
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT1 Current
     id: ${esp_id}_ct1_current  
+    register_type: holding
+    address: 0x07
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct1_cs).state == 0) {
-      return (id(${esp_id}_ct1_c).state);
-      }
-      else{
-      return (id(${esp_id}_ct1_c).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      float c = (value & 0xFFFF) * 0.001;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: A
     accuracy_decimals: 3
     icon: "mdi:alpha-a-circle"
     device_class: "current"
     state_class: "measurement"
-    update_interval: 10s
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct2_cs
-    register_type: holding
-    address: 0x09
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct2_c
-    register_type: holding
-    address: 0x0A
-    value_type: U_WORD
-    accuracy_decimals: 3
-    filters:
-      - multiply: 0.001
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT2 Current
     id: ${esp_id}_ct2_current  
+    register_type: holding
+    address: 0x09
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct2_cs).state == 0) {
-      return (id(${esp_id}_ct2_c).state);
-      }
-      else{
-      return (id(${esp_id}_ct2_c).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      float c = (value & 0xFFFF) * 0.001;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: A
     accuracy_decimals: 3
     icon: "mdi:alpha-a-circle"
     device_class: "current"
     state_class: "measurement"
-    update_interval: 10s
-
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct3_cs
-    register_type: holding
-    address: 0x0B
-    value_type: U_WORD
-    internal: true 
  
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct3_c
-    register_type: holding
-    address: 0x0C
-    value_type: U_WORD
-    accuracy_decimals: 3
-    filters:
-      - multiply: 0.001
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT3 Current
     id: ${esp_id}_ct3_current  
+    register_type: holding
+    address: 0x0B
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct3_cs).state == 0) {
-      return (id(${esp_id}_ct3_c).state);
-      }
-      else{
-      return (id(${esp_id}_ct3_c).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      float c = (value & 0xFFFF) * 0.001;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: A
     accuracy_decimals: 3
     icon: "mdi:alpha-a-circle"
     device_class: "current"
     state_class: "measurement"
-    update_interval: 10s
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
@@ -319,102 +280,69 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct1_ps
-    register_type: holding
-    address: 0x0F
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct1_p
-    register_type: holding
-    address: 0x10
-    value_type: U_WORD
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT1 Active Power
     id: ${esp_id}_ct1_power  
+    register_type: holding
+    address: 0x0F
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct1_ps).state == 0) {
-      return (id(${esp_id}_ct1_p).state);
-      }
-      else{
-      return (id(${esp_id}_ct1_p).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      uint16_t c = value & 0xFFFF;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: "W"
     icon: "mdi:home-lightning-bolt"
     device_class: "power"
     state_class: "measurement"
     accuracy_decimals: 0
-    update_interval: 10s
     
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct2_ps
-    register_type: holding
-    address: 0x11
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct2_p
-    register_type: holding
-    address: 0x12
-    value_type: U_WORD
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT2 Active Power
     id: ${esp_id}_ct2_power  
+    register_type: holding
+    address: 0x11
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct2_ps).state == 0) {
-      return (id(${esp_id}_ct2_p).state);
-      }
-      else{
-      return (id(${esp_id}_ct2_p).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      uint16_t c = value & 0xFFFF;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: "W"
     icon: "mdi:home-lightning-bolt"
     device_class: "power"
     state_class: "measurement"
     accuracy_decimals: 0
-    update_interval: 10s
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_ct3_ps
-    register_type: holding
-    address: 0x13
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_ct3_p
-    register_type: holding
-    address: 0x14
-    value_type: U_WORD
-    internal: true 
-
-  - platform: template
     name: ${friendly_name} CT3 Active Power
     id: ${esp_id}_ct3_power  
+    register_type: holding
+    address: 0x13
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_ct3_ps).state == 0) {
-      return (id(${esp_id}_ct3_p).state);
-      }
-      else{
-      return (id(${esp_id}_ct3_p).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      uint16_t c = value & 0xFFFF;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: "W"
     icon: "mdi:home-lightning-bolt"
     device_class: "power"
     state_class: "measurement"
     accuracy_decimals: 0
-    update_interval: 10s
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
@@ -454,36 +382,25 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
-    id: ${esp_id}_taps
+    name: ${friendly_name} Total Active Power
+    id: ${esp_id}_tapower 
     register_type: holding
     address: 0x0D
-    value_type: U_WORD
-    internal: true 
- 
-  - platform: modbus_controller
-    modbus_controller_id: smartmeter
-    id: ${esp_id}_tap
-    register_type: holding
-    address: 0x0E
-    value_type: U_WORD
-    internal: true 
-
-  - platform: template
-    name: ${friendly_name} Total Active Power
-    id: ${esp_id}_tapower
+    value_type: U_DWORD
     lambda: |-
-      if (id(${esp_id}_taps).state == 0) {
-      return (id(${esp_id}_tap).state);
-      }
-      else{
-      return (id(${esp_id}_tap).state * -1);
+      uint32_t value = (uint32_t)x;
+      uint16_t cs = (value >> 16) & 0xFFFF;
+      uint16_t c = value & 0xFFFF;
+      if (cs == 0) {
+      return c;
+      } else {
+      return -c;
       }
     unit_of_measurement: "W"
     icon: "mdi:transmission-tower"
     device_class: "power"
     state_class: "measurement"
     accuracy_decimals: 0
-    update_interval: 10s
 
   - platform: modbus_controller
     modbus_controller_id: smartmeter
